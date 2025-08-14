@@ -1,8 +1,9 @@
 import os
 import re
-from telegram.ext import Updater, CommandHandler, MessageHandler, filters
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = os.getenv("TOKEN")  # Ambil token dari environment variable
+TOKEN = os.getenv("TOKEN")
 
 def extract_cc_from_line(line):
     pattern = re.compile(
@@ -25,33 +26,32 @@ def extract_cc_from_file(input_file, output_file):
             f.write(item + "\n")
     return len(results)
 
-def start(update, context):
-    update.message.reply_text("Halo! Kirim file yang ingin diproses.")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Halo! Kirim file yang ingin diproses.")
 
-def handle_file(update, context):
+async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     file = update.message.document
     os.makedirs("downloads", exist_ok=True)
     file_path = f"downloads/{file.file_name}"
-    file.get_file().download(custom_path=file_path)
+    await file.get_file().download_to_drive(custom_path=file_path)
 
     os.makedirs("outputs", exist_ok=True)
     output_path = f"outputs/clean_{file.file_name}"
     count = extract_cc_from_file(file_path, output_path)
 
     if count > 0:
-        context.bot.send_document(chat_id=update.message.chat.id, document=open(output_path, 'rb'))
-        update.message.reply_text(f"{count} kartu berhasil diekstrak dan dikirim.")
+        await context.bot.send_document(chat_id=update.message.chat.id, document=open(output_path, 'rb'))
+        await update.message.reply_text(f"{count} kartu berhasil diekstrak dan dikirim.")
     else:
-        update.message.reply_text("Tidak ada data kartu yang cocok ditemukan.")
+        await update.message.reply_text("Tidak ada data kartu yang cocok ditemukan.")
 
 def main():
-    updater = Updater(TOKEN)
-    dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.document, handle_file))
-    updater.start_polling()
-    updater.idle()
+    application = ApplicationBuilder().token(TOKEN).build()
+
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.Document.ALL, handle_file))
+
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
-
