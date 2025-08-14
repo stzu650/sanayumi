@@ -1,6 +1,6 @@
 import os
 import re
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, MessageHandler, filters
 
 TOKEN = os.getenv("TOKEN")  # Ambil token dari environment variable
 
@@ -54,3 +54,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
