@@ -3,7 +3,7 @@ from telegram import Bot
 import os
 import re
 
-TOKEN = '8440394027:AAGyENs3h0jtLIugwJhm_uNOyOLuLqqv3Z0'
+TOKEN = 'YOUR_TELEGRAM_BOT_TOKEN'
 
 def extract_cc_from_line(line):
     pattern = re.compile(
